@@ -50,3 +50,121 @@ ggp_weather_scatterplot =
 ggp_weather_scatterplot
 ```
 
+
+## Fancier scatterplot
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = .3, size = .8) +
+  geom_smooth(se = FALSE)
+```
+
+where you define aesthetics can matter!!!
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .3, size = .8) +
+  geom_smooth(se = FALSE)
+```
+
+use faceting real quick
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = .3) +
+  geom_smooth(se = FALSE) +
+  facet_grid(. ~ name)
+```
+
+Let's make a somewhat more interesting scatterplot
+
+```{r}
+weather_df |>
+  ggplot(aes(x = date, y = tmax, color = name, size = prcp)) + 
+  geom_point(alpha = .3) +
+  geom_smooth(se = FALSE) +
+  facet_grid(. ~ name)
+```
+
+Learning Assessment:
+
+```{r}
+weather_df |> 
+  filter(name == "CentralPark_NY") |> 
+  mutate(
+    tmax_fahr = tmax * (9 / 5) + 32,
+    tmin_fahr = tmin * (9 / 5) + 32) |> 
+  ggplot(aes(x = tmin_fahr, y = tmax_fahr)) +
+  geom_point(alpha = .5) + 
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+## Small things
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .3, size = .8) +
+  geom_smooth(se = FALSE)
+```
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_hex()
+```
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(color = "blue")
+```
+
+histogram:
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmax, fill = name)) + 
+  geom_histogram(position = "dodge", binwidth = 2) +
+  facet_grid(. ~ name)
+```
+
+maybe a density plot?
+
+```{r}
+weather_df |>
+  ggplot(aes(x = tmax, fill = name)) + 
+  geom_density(alpha = .4, adjust = .5, color = "blue")
+```
+
+boxplots:
+
+```{r}
+weather_df |>
+  ggplot(aes(x = name, y = tmax)) + 
+  geom_boxplot()
+```
+
+Violin plots:
+
+```{r}
+weather_df |>
+  ggplot(aes(x = name, y = tmax)) + 
+  geom_violin(aes(fill = name), alpha = .5) + 
+  stat_summary(fun = "median", color = "blue")
+```
+
+Ridge plots:
+
+```{r}
+weather_df |>
+ggplot(aes(x = tmax, y = name)) + 
+  geom_density_ridges(scale = .85)
+```
+
+
+
+
