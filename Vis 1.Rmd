@@ -165,6 +165,26 @@ ggplot(aes(x = tmax, y = name)) +
   geom_density_ridges(scale = .85)
 ```
 
+## Saving and embedding plots:
 
+saving plots:
+
+```{r}
+ggp_weather = 
+  ggplot(weather_df, aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) 
+
+ggsave("ggp_weather.pdf", ggp_weather, width = 8, height = 5)
+```
+
+embedding plots:
+
+```{r, fig.width=6, fig.asp=0.6}
+gg_weather = 
+  ggplot(weather_df, aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5)
+
+ggsave("gg_weather.pdf", gg_weather)
+```
 
 

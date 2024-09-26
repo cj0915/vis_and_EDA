@@ -327,3 +327,33 @@ ggplot(aes(x = tmax, y = name)) +
     ## (`stat_density_ridges()`).
 
 ![](Vis-1_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+## Saving and embedding plots:
+
+saving plots:
+
+``` r
+ggp_weather = 
+  ggplot(weather_df, aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) 
+
+ggsave("ggp_weather.pdf", ggp_weather, width = 8, height = 5)
+```
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+embedding plots:
+
+``` r
+gg_weather = 
+  ggplot(weather_df, aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5)
+
+ggsave("gg_weather.pdf", gg_weather)
+```
+
+    ## Saving 6 x 3.59 in image
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
