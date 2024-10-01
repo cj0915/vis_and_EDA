@@ -86,4 +86,99 @@ ggp_temp_plot =
 ggp_temp_plot
 ```
 
-Themes
+## Themes:
+
+```{r}
+ggp_temp_plot + 
+  theme(legend.position = "bottom")
+```
+
+```{r}
+ggp_temp_plot + 
+  theme_bw() + 
+  theme(legend.position = "bottom")
+```
+
+```{r}
+ggp_temp_plot + 
+  theme_classic() + 
+  theme(legend.position = "bottom")
+```
+
+...for some reason, here’s the Excel 2003 theme from ggthemes:
+(Do not use)
+
+```{r}
+ggp_temp_plot + 
+  ggthemes::theme_excel() + 
+  theme(legend.position = "bottom")
+```
+
+Learning Assessment:
+Revisit the plot showing tmax against date for each location.
+
+```{r}
+ggplot(weather_df, aes(x = date, y = tmax, color = name)) + 
+  geom_smooth(se = FALSE) + 
+  geom_point(aes(size = prcp), alpha = .3) + 
+  labs(
+    title = "Temperature plot",
+    x = "Date",
+    y = "Maxiumum daily temperature (C)",
+    color = "Location",
+    caption = "Data from the rnoaa package"
+  ) + 
+  viridis::scale_color_viridis(discrete = TRUE) + 
+  theme_minimal() + 
+  theme(legend.position = "bottom")
+```
+
+Extra bonus stuff in 'ggplot'
+
+Use different data sets in different `geom`s
+
+```{r}
+central_park_df = 
+  weather_df |> 
+  filter(name == "CentralPark_NY")
+
+molokai_df = 
+  weather_df |> 
+  filter(name == "Molokai_HI")
+
+ggplot(data = molokai_df, aes(x = date, y = tmax, color = name)) + 
+  geom_point() + 
+  geom_line(data = central_park_df) 
+```
+
+## Multiple panels
+
+```{r}
+weather_df |> 
+  ggplot(aes(x = tmax, fill = name)) + 
+  geom_density() +
+  facet_grid(.~ name)
+```
+
+```{r}
+library(patchwork)
+
+tmax_tmin_p = 
+  weather_df |> 
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = .5)
+
+tmax_dens_p = 
+  weather_df |> 
+  ggplot(aes(x = tmax, fill = name)) + 
+  geom_density(alpha = .5)
+
+tmax_date_p = 
+  weather_df |> 
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point(alpha = .5) +
+  geom_smooth(se = FALSE)
+
+tmax_tmin_p + tmax_date_p
+```
+
