@@ -1,8 +1,8 @@
 ---
-title: "vis 2"
+title: "Vis 2"
 author: "Chenyu Jin"
 date: "2024-10-01"
-output: html_document
+output: github_document
 ---
 
 ```{r}
@@ -179,6 +179,87 @@ tmax_date_p =
   geom_point(alpha = .5) +
   geom_smooth(se = FALSE)
 
-tmax_tmin_p + tmax_date_p
+(tmax_tmin_p + tmax_dens_p) / tmax_date_p
+```
+
+## Data Manipulation
+
+```{r}
+weather_df |>
+  ggplot(aes(x = name, y = tmax)) + 
+  geom_violin(aes(fill = name), color = "blue", alpha = .5) + 
+  theme(legend.position = "bottom")
+```
+
+```{r}
+weather_df |>
+  mutate(name = forcats::fct_relevel(name, c("Molokai_HI", "CentralPark_NY", "Waterhole_WA"))) |> 
+  ggplot(aes(x = name, y = tmax)) + 
+  geom_violin(aes(fill = name), color = "blue", alpha = .5) + 
+  theme(legend.position = "bottom")
+```
+
+```{r}
+weather_df |>
+  mutate(name = forcats::fct_reorder(name, tmax)) |> 
+  ggplot(aes(x = name, y = tmax)) + 
+  geom_violin(aes(fill = name), color = "blue", alpha = .5) + 
+  theme(legend.position = "bottom")
+```
+
+PULSE data next
+
+```{r}
+library(haven)
+
+pulse_df  =
+  read_sas("data/public_pulse_data.sas7bdat") |>
+  janitor::clean_names() |>
+  pivot_longer(
+    cols = bdi_score_bl:bdi_score_12m,
+    names_to = "visit",
+    values_to = "bdi_score",
+    names_prefix = "bdi_score_"
+  ) |>
+  mutate(visit = ifelse(visit == "bl", "00m", visit))
+
+pulse_df |>
+  ggplot(aes(x = visit, y = bdi_score)) +
+  geom_boxplot()
+```
+
+Last example:
+
+```{r}
+pup_data = 
+  read_csv("data/FAS_pups.csv", na = c("NA", ".", "")) |>
+  janitor::clean_names() |>
+  mutate(
+    sex = 
+      case_match(
+        sex, 
+        1 ~ "male", 
+        2 ~ "female"))
+
+litter_data = 
+  read_csv("data/FAS_litters.csv", na = c("NA", ".", "")) |>
+  janitor::clean_names() |>
+  separate(group, into = c("dose", "day_of_tx"), sep = 3)
+
+fas_data = left_join(pup_data, litter_data, by = "litter_number")
+
+fas_data_long <- fas_data |> 
+  select(sex, dose, day_of_tx, pd_ears:pd_walk) |> 
+  pivot_longer(
+    pd_ears:pd_walk,
+    names_to = "outcome", 
+    values_to = "pn_day") |> 
+  drop_na()
+
+fas_data_long |> 
+  mutate(outcome = forcats::fct_reorder(outcome, pn_day, median)) |> 
+  ggplot(aes(x = dose, y = pn_day)) + 
+  geom_violin() + 
+  facet_grid(day_of_tx ~ outcome)
 ```
 
