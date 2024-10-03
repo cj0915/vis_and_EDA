@@ -95,7 +95,7 @@ weather_df |>
 
 ![](EDA_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
-## group_by()
+## `group_by()`
 
 ``` r
 weather_df |>
@@ -311,3 +311,178 @@ weather_df |>
 | 2022-10-01 |           17.4 |       29.2 |         11.9 |
 | 2022-11-01 |           14.0 |       28.0 |          2.1 |
 | 2022-12-01 |            6.8 |       27.3 |         -0.5 |
+
+## Grouped `mutate`
+
+``` r
+weather_df |>
+  group_by(name) |>
+  mutate(
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    centered_tmax = tmax - mean_tmax) |> 
+  ggplot(aes(x = date, y = centered_tmax, color = name)) + 
+    geom_point() 
+```
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](EDA_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+## Window functions
+
+``` r
+weather_df |>
+  group_by(name) |>
+  mutate(
+    temp_ranking = min_rank(desc(tmax))
+    ) |>
+  filter(temp_ranking < 4)
+```
+
+    ## # A tibble: 16 × 8
+    ## # Groups:   name [3]
+    ##    name           id        date        prcp  tmax  tmin month      temp_ranking
+    ##    <chr>          <chr>     <date>     <dbl> <dbl> <dbl> <date>            <int>
+    ##  1 CentralPark_NY USW00094… 2021-06-29     0  35    25.6 2021-06-01            3
+    ##  2 CentralPark_NY USW00094… 2021-06-30   165  36.7  22.8 2021-06-01            1
+    ##  3 CentralPark_NY USW00094… 2022-07-20     0  35    25.6 2022-07-01            3
+    ##  4 CentralPark_NY USW00094… 2022-07-23     0  35    25.6 2022-07-01            3
+    ##  5 CentralPark_NY USW00094… 2022-07-24     0  35    26.1 2022-07-01            3
+    ##  6 CentralPark_NY USW00094… 2022-08-09     8  36.1  25.6 2022-08-01            2
+    ##  7 Molokai_HI     USW00022… 2021-05-31     0  32.2  17.2 2021-05-01            2
+    ##  8 Molokai_HI     USW00022… 2021-09-16     0  32.2  21.1 2021-09-01            2
+    ##  9 Molokai_HI     USW00022… 2022-07-30     0  32.2  22.2 2022-07-01            2
+    ## 10 Molokai_HI     USW00022… 2022-08-06     0  33.3  20.6 2022-08-01            1
+    ## 11 Molokai_HI     USW00022… 2022-08-17     0  32.2  21.1 2022-08-01            2
+    ## 12 Molokai_HI     USW00022… 2022-09-24     0  32.2  22.2 2022-09-01            2
+    ## 13 Molokai_HI     USW00022… 2022-09-30     0  32.2  20   2022-09-01            2
+    ## 14 Waterhole_WA   USS0023B… 2021-06-27     0  28.5  17.6 2021-06-01            3
+    ## 15 Waterhole_WA   USS0023B… 2021-06-28     0  30.8  20.7 2021-06-01            2
+    ## 16 Waterhole_WA   USS0023B… 2021-06-29     0  32.4  17.6 2021-06-01            1
+
+``` r
+weather_df |>
+  group_by(name) |>
+  mutate(
+    temp_change = tmax - lag(tmax)
+    ) |>
+  filter(min_rank(temp_change) < 3)
+```
+
+    ## # A tibble: 6 × 8
+    ## # Groups:   name [3]
+    ##   name           id          date        prcp  tmax  tmin month      temp_change
+    ##   <chr>          <chr>       <date>     <dbl> <dbl> <dbl> <date>           <dbl>
+    ## 1 CentralPark_NY USW00094728 2022-02-24     0   1.7  -1.6 2022-02-01       -18.3
+    ## 2 CentralPark_NY USW00094728 2022-12-24     0  -9.3 -13.8 2022-12-01       -23.7
+    ## 3 Molokai_HI     USW00022534 2021-01-18   234  22.2  19.4 2021-01-01        -5.6
+    ## 4 Molokai_HI     USW00022534 2022-11-28    56  22.2  20.6 2022-11-01        -5  
+    ## 5 Waterhole_WA   USS0023B17S 2021-06-30     0  21.5  10.9 2021-06-01       -10.9
+    ## 6 Waterhole_WA   USS0023B17S 2022-06-28     0  12.4   5.7 2022-06-01       -11.2
+
+``` r
+weather_df |>
+  group_by(name) |>
+  mutate(
+    temp_change = tmax - lag(tmax)) |>
+  summarize(
+    temp_change_sd = sd(temp_change, na.rm = TRUE),
+    temp_change_max = max(temp_change, na.rm = TRUE))
+```
+
+    ## # A tibble: 3 × 3
+    ##   name           temp_change_sd temp_change_max
+    ##   <chr>                   <dbl>           <dbl>
+    ## 1 CentralPark_NY           4.43            12.2
+    ## 2 Molokai_HI               1.24             5.6
+    ## 3 Waterhole_WA             3.04            11.1
+
+## Learning Assessment 1:
+
+``` r
+pulse_data = 
+  haven::read_sas("data/public_pulse_data.sas7bdat") |>
+  janitor::clean_names() |>
+  pivot_longer(
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit", 
+    names_prefix = "bdi_score_",
+    values_to = "bdi") |>
+  select(id, visit, everything()) |>
+  mutate(
+    visit = replace(visit, visit == "bl", "00m"),
+    visit = factor(visit, levels = str_c(c("00", "01", "06", "12"), "m"))) |>
+  arrange(id, visit)
+```
+
+``` r
+pulse_data |> 
+  group_by(visit) |> 
+  summarize(
+    mean_bdi = mean(bdi, na.rm = TRUE),
+    median_bdi = median(bdi, na.rm = TRUE)) |> 
+  knitr::kable(digits = 3)
+```
+
+| visit | mean_bdi | median_bdi |
+|:------|---------:|-----------:|
+| 00m   |    7.995 |          6 |
+| 01m   |    6.046 |          4 |
+| 06m   |    5.672 |          4 |
+| 12m   |    6.097 |          4 |
+
+## Learning Assessment 2:
+
+``` r
+pup_data = 
+  read_csv("data/FAS_pups.csv") |>
+  janitor::clean_names() |>
+  mutate(sex = recode(sex, `1` = "male", `2` = "female")) 
+```
+
+    ## Rows: 313 Columns: 6
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (2): Litter Number, PD ears
+    ## dbl (4): Sex, PD eyes, PD pivot, PD walk
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+litter_data = 
+  read_csv("data/FAS_litters.csv") |>
+  janitor::clean_names() |>
+  separate(group, into = c("dose", "day_of_tx"), sep = 3)
+```
+
+    ## Rows: 49 Columns: 8
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (4): Group, Litter Number, GD0 weight, GD18 weight
+    ## dbl (4): GD of Birth, Pups born alive, Pups dead @ birth, Pups survive
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+fas_data = left_join(pup_data, litter_data, by = "litter_number") 
+
+fas_data |> 
+  group_by(dose, day_of_tx) |> 
+  drop_na(dose) |> 
+  summarize(mean_pivot = mean(pd_pivot, na.rm = TRUE)) |> 
+  pivot_wider(
+    names_from = dose, 
+    values_from = mean_pivot) |> 
+  knitr::kable(digits = 3)
+```
+
+    ## `summarise()` has grouped output by 'dose'. You can override using the
+    ## `.groups` argument.
+
+| day_of_tx |   Con |   Low |   Mod |
+|:----------|------:|------:|------:|
+| 7         | 7.000 | 7.939 | 6.984 |
+| 8         | 6.236 | 7.721 | 7.042 |
